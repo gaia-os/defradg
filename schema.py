@@ -248,23 +248,26 @@ def create(typename, *args, key_response=False):
 if True:
   client.load_schema(schema)
 
-def rand_timeseries(variable_key, domain, kind):
+def rand_timeseries(key, domain, kind):
   """
-  Build a categorical and a real timeseries for the given variable_key
-  variable_key: the variable key
+  Build a categorical and a real timeseries for the given key
+  key: the key
   kind: one of Observable or LatentVariable
   """
   match kind:
     case "Observable":
       if domain == "Real":
-          timestampvaluereal_key, timestampreal = create("ObservableTimestampValueReal", variable_key, key_response=True)
+        print("gen ObservableReal")
+        timestampvaluereal_key, timestampreal = create("ObservableTimestampValueReal", key, key_response=True)
       elif domain == "Categorical":
-        timestampvalueobs_key, timestampobs = create("ObservableTimestampValueCategorical", variable_key, key_response=True)
+        print("gen ObservableReal")
+        timestampvalueobs_key, timestampobs = create("ObservableTimestampValueCategorical", key, key_response=True)
     case "LatentVariable":
       if domain == "Real":  
-        timestampvaluereal_key, timestampreal = create("LatentTimestampValueReal", variable_key, key_response=True)
+        timestampvaluereal_key, timestampreal = create("LatentTimestampValueReal", key, key_response=True)
       elif domain == "Categorical":
-        timestampvalueobs_key, timestampobs = create("LatentTimestampValueCategorical", variable_key, key_response=True)
+        timestampvalueobs_key, timestampobs = create("LatentTimestampValueCategorical", key, key_response=True)
+
 
 projk = create("Project")
 for _ in range(2):
@@ -291,7 +294,7 @@ for _ in range(2):
 
       # build the timeseries for the observable
       for _ in range(5):
-        rand_timeseries(variable_key, observable_domain, "Observable")
+        rand_timeseries(observable_key, observable_domain, "Observable")
 
       create("Method", observable_key)
     
