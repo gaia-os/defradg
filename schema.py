@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 schema = """
 type Project {
     name: String
+    handle: String
     assessments: [Assessment]
 }
 
@@ -30,18 +31,18 @@ type LatentVariable {
 type LatentTimestampValueReal {
     variable: LatentVariable
     timestamp: DateTime
-    upper: Float
-    lower: Float
-    mean: Float
+    upper_ci95: Float
+    lower_ci95: Float
+    median: Float
     sigmoid_negentropy: Float
 }
 
 type ObservableTimestampValueReal {
     variable: Observable
     timestamp: DateTime
-    upper: Float
-    lower: Float
-    mean: Float
+    upper_ci95: Float
+    lower_ci95: Float
+    median: Float
     sigmoid_negentropy: Float
 }
 
@@ -83,6 +84,7 @@ type Evidence {
     confidence: Float
     uploaded: DateTime
     uploaded_by: GaiaUser
+    location: String
 }
 
 type GaiaUser {
@@ -99,6 +101,7 @@ type Method {
 type Badge {
     variable: LatentVariable
     name: String
+    handle: String
     description: String
     unit: String
     more_is_better: Boolean
@@ -128,7 +131,8 @@ def random_datetime():
 
 def rand_project():
  return {
-    "name": "Project " + str(random.randint(1, 1000))
+    "name": "Project " + str(random.randint(1, 1000)),
+    "handle": "project-" + str(random.randint(1, 1000))
   }
 
 def rand_assessment(project_key):
@@ -140,7 +144,7 @@ def rand_assessment(project_key):
 def rand_latent_variable(assessment_key, domain):
   return {
     "assessment_id": assessment_key,  # Assumes that you've already created the assessment and have its key
-    "name": "Variable " + str(random.randint(1, 1000)),
+    "name": "Variable " + str(random.randint(1, 10000)),
     "domain": domain,
     "categories": ["Dead", "Alive", "Thriving"],
     "ordered_categorical": True
@@ -150,9 +154,9 @@ def rand_timestampvalue_real(variable_key):
   return {
     "variable_id": variable_key,  # Assumes that you've already created the variable and have its key
     "timestamp": random_datetime(),
-    "upper": random.uniform(0, 100),
-    "lower": random.uniform(0, 100),
-    "mean": random.uniform(0, 100),
+    "upper_ci95": random.uniform(0, 100),
+    "lower_ci95": random.uniform(0, 100),
+    "median": random.uniform(0, 10000),
     "sigmoid_negentropy": random.uniform(0, 1)
 }
 
@@ -204,6 +208,7 @@ def rand_method(observable_key):
 def rand_badge(variable_key):
   return {
     "variable_id": variable_key, # Assumes that you've already created the variable and have its key
+    "handle": "badge-" + str(random.randint(1, 1000)),
     "name": "Badge " + str(random.randint(1, 1000)),
     "description": "Description of Badge " + str(random.randint(1, 1000)),
     "unit": "Unit " + str(random.randint(1, 1000)),
@@ -280,7 +285,7 @@ for _ in range(2):
     create("Badge", variable_key)
 
     # build the timeseries for the latent variable
-    for _ in range(5):
+    for _ in range(3):
       rand_timeseries(variable_key, variable_domain, "LatentVariable")
 
     # create the indicators
@@ -293,7 +298,7 @@ for _ in range(2):
       indicator_key = create("Indicator", variable_key, observable_key)
 
       # build the timeseries for the observable
-      for _ in range(5):
+      for _ in range(3):
         rand_timeseries(observable_key, observable_domain, "Observable")
 
       create("Method", observable_key)
