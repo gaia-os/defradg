@@ -1,3 +1,12 @@
+
+This is the Digital Gaia fork of DefraDB used for testing purposes. 
+
+To get started, clone this repo and run:
+```
+docker build . -t defradb_docker_dev
+docker run -i -p 9181:9181 defradb_docker_dev
+```
+
 ![Tests Workflow](https://github.com/sourcenetwork/defradb/actions/workflows/run-tests.yml/badge.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/sourcenetwork/defradb)](https://goreportcard.com/report/github.com/sourcenetwork/defradb)
 [![codecov](https://codecov.io/gh/sourcenetwork/defradb/branch/develop/graph/badge.svg?token=RHAORX13PA)](https://codecov.io/gh/sourcenetwork/defradb)
