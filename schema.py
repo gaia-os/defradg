@@ -79,16 +79,16 @@ type Observable {
 
 type Evidence {
     observable: Observable
+    uploaded_by: User
     name: String
     asset_url: String
     confidence: Float
     uploaded: DateTime
-    uploaded_by: GaiaUser
     location: String
 }
 
-type GaiaUser {
-    evidence: Evidence
+type User {
+    evidence: [Evidence]
     name: String
     profile_url: String
 }
@@ -183,18 +183,18 @@ def rand_indicator(variable_key, observable_key):
     "mutual_information": random.uniform(0, 1)
   }
 
-def rand_evidence(observable_key):
+def rand_evidence(observable_key, user_key):
   return {
     "observable_id": observable_key, # Assumes that you've already created the observable and have its key
+    "uploaded_by_id": user_key,
     "name": "Evidence " + str(random.randint(1, 1000)),
     "asset_url": "https://example.com/evidence/" + str(random.randint(1, 1000)),
     "confidence": random.uniform(0, 1),
     "uploaded": random_datetime(),
   }
 
-def rand_user(evidence_key):
+def rand_user():
   return {
-    "evidence_id": evidence_key,
     "name": "User " + str(random.randint(1, 1000)),
     "profile_url": "https://example.com/profile/" + str(random.randint(1, 1000))
   }
@@ -230,7 +230,7 @@ typenames = {
     "Indicator": rand_indicator,
     "Observable": rand_observable,
     "Evidence": rand_evidence,
-    "GaiaUser": rand_user,
+    "User": rand_user,
     "Method": rand_method,
     "Badge": rand_badge,
   }
@@ -262,10 +262,8 @@ def rand_timeseries(key, domain, kind):
   match kind:
     case "Observable":
       if domain == "Real":
-        print("gen ObservableReal")
         timestampvaluereal_key, timestampreal = create("ObservableTimestampValueReal", key, key_response=True)
       elif domain == "Categorical":
-        print("gen ObservableReal")
         timestampvalueobs_key, timestampobs = create("ObservableTimestampValueCategorical", key, key_response=True)
     case "LatentVariable":
       if domain == "Real":  
@@ -305,6 +303,6 @@ for _ in range(2):
     
       # create evidences on the observable
       for _ in range(random.randint(1,3)):
-        evidence_key = create("Evidence", observable_key)
-        create("GaiaUser", evidence_key)
+        user_key = create("User")
+        evidence_key = create("Evidence", observable_key, user_key)
 
