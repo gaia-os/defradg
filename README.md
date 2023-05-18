@@ -7,6 +7,11 @@ docker build . -t defradb_docker_dev
 docker run -i -p 9181:9181 defradb_docker_dev
 ```
 
+A common command used during testing is one that stops the running container, starts a new one, and loads it up with the schema. Here is that command:
+```bash
+docker kill $(docker ps | grep defradb_docker_dev | awk '{print $1}'); docker run -i -p 9181:9181 defradb_docker_dev &; sleep 2; python3 schema.py
+```
+
 ![Tests Workflow](https://github.com/sourcenetwork/defradb/actions/workflows/run-tests.yml/badge.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/sourcenetwork/defradb)](https://goreportcard.com/report/github.com/sourcenetwork/defradb)
 [![codecov](https://codecov.io/gh/sourcenetwork/defradb/branch/develop/graph/badge.svg?token=RHAORX13PA)](https://codecov.io/gh/sourcenetwork/defradb)
