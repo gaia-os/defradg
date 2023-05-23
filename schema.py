@@ -14,6 +14,37 @@ type Assessment {
     project: Project
     date: DateTime
     latent_variables: [LatentVariable]
+    model: Model
+}
+
+type Model {
+  assessment: Assessment
+  repo_url: String
+}
+
+type Framework {
+  name: String
+  handle: String
+  outcomes: [Outcome]
+}
+
+type Outcome {
+  name: String
+  framework: Framework
+  more_is_better: Boolean
+  variable: LatentVariable
+  impact: Impact
+  description: String
+  unit: String
+  time_unit: String
+}
+
+type Impact {
+  outcome: Outcome
+  variable: LatentVariable
+  factor: Float
+  effect_size: Float
+  contribution: Float
 }
 
 type LatentVariable {
@@ -21,6 +52,8 @@ type LatentVariable {
     badge: Badge
     name: String
     domain: String
+    outcome: Outcome
+    impacts: [Impact]
     categories: [String]
     ordered_categorical: Boolean
     timeseries_real: [LatentTimestampValueReal]
@@ -61,7 +94,7 @@ type ObservableTimestampValueCategorical {
 }
 
 type Indicator {
-    latent_variable: LatentVariable
+    variable: LatentVariable
     observable: Observable
     correlation: Float
     mutual_information: Float
@@ -160,6 +193,24 @@ def rand_timestampvalue_real(variable_key):
     "sigmoid_negentropy": random.uniform(0, 1)
 }
 
+def rand_timeseries(key, domain, kind):
+  """
+  Build a categorical and a real timeseries for the given key
+  key: the key
+  kind: one of Observable or LatentVariable
+  """
+  match kind:
+    case "Observable":
+      if domain == "Real":
+        timestampvaluereal_key, timestampreal = create("ObservableTimestampValueReal", key, key_response=True)
+      elif domain == "Categorical":
+        timestampvalueobs_key, timestampobs = create("ObservableTimestampValueCategorical", key, key_response=True)
+    case "LatentVariable":
+      if domain == "Real":  
+        timestampvaluereal_key, timestampreal = create("LatentTimestampValueReal", key, key_response=True)
+      elif domain == "Categorical":
+        timestampvalueobs_key, timestampobs = create("LatentTimestampValueCategorical", key, key_response=True)
+
 def rand_timestampvalue_categorical(variable_key):
   return {
     "variable_id": variable_key, # Assumes that you've already created the variable and have its key
@@ -178,7 +229,7 @@ def rand_observable(domain):
 def rand_indicator(variable_key, observable_key):
   return {
     "observable_id": observable_key,  # Assumes that you've already created the observable and have its key
-    "latent_variable_id": variable_key, # Assumes that you've already created the variable and have its key
+    "variable_id": variable_key, # Assumes that you've already created the variable and have its key
     "correlation": random.uniform(0, 1),
     "mutual_information": random.uniform(0, 1)
   }
@@ -219,6 +270,38 @@ def rand_badge(variable_key):
     "confidence": random.uniform(0, 1)
   }
 
+def rand_model(assessment_key):
+  return {
+    "assessment_id": assessment_key,
+    "repo_url": "https://example.com/repo/" + str(random.randint(1, 1000))
+  }
+
+def rand_framework():
+  return {
+    "name": "Framework " + str(random.randint(1, 1000)),
+    "handle": "framework-" + str(random.randint(1, 1000))
+  }
+
+def rand_outcome(framework_key, variable_key):
+  return {
+    "framework_id": framework_key,
+    "name": "Outcome " + str(random.randint(1, 1000)),
+    "more_is_better": random.choice([True, False]),
+    "variable_id": variable_key,
+    "description": "Description of Outcome " + str(random.randint(1, 1000)),
+    "unit": "Unit " + str(random.randint(1, 1000)),
+    "time_unit": "Time Unit " + str(random.randint(1, 1000))
+  }
+
+def rand_impact(outcome_key, variable_key):
+  return {
+    "outcome_id": outcome_key,
+    "variable_id": variable_key,
+    "factor": random.uniform(0, 1),
+    "effect_size": random.uniform(0, 1),
+    "contribution": random.uniform(0, 1)
+  }
+
 typenames = {
     "Project": rand_project,
     "Assessment": rand_assessment,
@@ -233,6 +316,10 @@ typenames = {
     "User": rand_user,
     "Method": rand_method,
     "Badge": rand_badge,
+    "Model": rand_model,
+    "Framework": rand_framework,
+    "Outcome": rand_outcome,
+    "Impact": rand_impact,
   }
 
 def create(typename, *args, key_response=False):
@@ -253,34 +340,27 @@ def create(typename, *args, key_response=False):
 if True:
   client.load_schema(schema)
 
-def rand_timeseries(key, domain, kind):
-  """
-  Build a categorical and a real timeseries for the given key
-  key: the key
-  kind: one of Observable or LatentVariable
-  """
-  match kind:
-    case "Observable":
-      if domain == "Real":
-        timestampvaluereal_key, timestampreal = create("ObservableTimestampValueReal", key, key_response=True)
-      elif domain == "Categorical":
-        timestampvalueobs_key, timestampobs = create("ObservableTimestampValueCategorical", key, key_response=True)
-    case "LatentVariable":
-      if domain == "Real":  
-        timestampvaluereal_key, timestampreal = create("LatentTimestampValueReal", key, key_response=True)
-      elif domain == "Categorical":
-        timestampvalueobs_key, timestampobs = create("LatentTimestampValueCategorical", key, key_response=True)
 
+framework_key = create("Framework") # Create a Framework
 
 projk = create("Project")
 for _ in range(2):
   assessment_key = create("Assessment", projk)
+
+  model_key = create("Model", assessment_key) # Create Model for each Assessment
+
+  # every variable we make will impact this one outcome
+  outcome_variable_domain = random.choice(["Real", "Categorical"])
+  outcome_variable_key = create("LatentVariable", assessment_key, outcome_variable_domain)
+  outcome_key = create("Outcome", framework_key, outcome_variable_key)
 
   for _ in range(2):
     variable_domain = random.choice(["Real", "Categorical"])
     variable_key = create("LatentVariable", assessment_key, variable_domain)
 
     create("Badge", variable_key)
+
+    impact_key = create("Impact", outcome_key, variable_key)
 
     # build the timeseries for the latent variable
     for _ in range(3):
@@ -305,4 +385,5 @@ for _ in range(2):
       for _ in range(random.randint(1,3)):
         user_key = create("User")
         evidence_key = create("Evidence", observable_key, user_key)
+
 
