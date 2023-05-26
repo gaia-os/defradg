@@ -159,13 +159,24 @@ func connectPeers(
 	// allowed to complete before documentation begins or it will not even try and sync it. So for now, we
 	// sleep a little.
 	time.Sleep(100 * time.Millisecond)
+	return setupPeerWaitSync(ctx, t, testCase, 0, cfg, sourceNode, targetNode)
+}
 
+func setupPeerWaitSync(
+	ctx context.Context,
+	t *testing.T,
+	testCase TestCase,
+	startIndex int,
+	cfg ConnectPeers,
+	sourceNode *node.Node,
+	targetNode *node.Node,
+) chan struct{} {
 	nodeCollections := map[int][]int{}
 	sourceToTargetEvents := []int{0}
 	targetToSourceEvents := []int{0}
 	waitIndex := 0
-	for _, a := range testCase.Actions {
-		switch action := a.(type) {
+	for i := startIndex; i < len(testCase.Actions); i++ {
+		switch action := testCase.Actions[i].(type) {
 		case SubscribeToCollection:
 			if action.ExpectedError != "" {
 				// If the subscription action is expected to error, then we should do nothing here.
@@ -304,14 +315,25 @@ func configureReplicator(
 
 	_, err = sourceNode.Peer.SetReplicator(ctx, addr)
 	require.NoError(t, err)
+	return setupRepicatorWaitSync(ctx, t, testCase, 0, cfg, sourceNode, targetNode)
+}
 
+func setupRepicatorWaitSync(
+	ctx context.Context,
+	t *testing.T,
+	testCase TestCase,
+	startIndex int,
+	cfg ConfigureReplicator,
+	sourceNode *node.Node,
+	targetNode *node.Node,
+) chan struct{} {
 	sourceToTargetEvents := []int{0}
 	targetToSourceEvents := []int{0}
 	docIDsSyncedToSource := map[int]struct{}{}
 	waitIndex := 0
 	currentdocID := 0
-	for _, a := range testCase.Actions {
-		switch action := a.(type) {
+	for i := startIndex; i < len(testCase.Actions); i++ {
+		switch action := testCase.Actions[i].(type) {
 		case CreateDoc:
 			if !action.NodeID.HasValue() || action.NodeID.Value() == cfg.SourceNodeID {
 				docIDsSyncedToSource[currentdocID] = struct{}{}
@@ -497,12 +519,11 @@ func waitForSync(
 const randomMultiaddr = "/ip4/0.0.0.0/tcp/0"
 
 func RandomNetworkingConfig() ConfigureNode {
-	cfg := config.DefaultConfig()
-	cfg.Net.P2PAddress = randomMultiaddr
-	cfg.Net.RPCAddress = "0.0.0.0:0"
-	cfg.Net.TCPAddress = randomMultiaddr
-
-	return ConfigureNode{
-		Config: *cfg,
+	return func() config.Config {
+		cfg := config.DefaultConfig()
+		cfg.Net.P2PAddress = randomMultiaddr
+		cfg.Net.RPCAddress = "0.0.0.0:0"
+		cfg.Net.TCPAddress = randomMultiaddr
+		return *cfg
 	}
 }

@@ -475,7 +475,7 @@ func getDatabases(ctx context.Context, t *testing.T) ([]databaseInfo, error) {
 	databases := []databaseInfo{}
 
 	for _, dbt := range testUtils.GetDatabaseTypes() {
-		db, err := testUtils.GetDatabase(ctx, t, dbt)
+		db, _, err := testUtils.GetDatabase(ctx, t, dbt)
 		if err != nil {
 			return nil, err
 		}
@@ -506,7 +506,7 @@ func setupDatabase(
 	updates immutable.Option[map[int]map[int][]string],
 ) {
 	db := dbi.db
-	err := db.AddSchema(ctx, schema)
+	_, err := db.AddSchema(ctx, schema)
 	if testUtils.AssertError(t, description, err, expectedError) {
 		return
 	}

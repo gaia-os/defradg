@@ -31,14 +31,14 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/multiformats/go-multiaddr v0.9.0
 	github.com/multiformats/go-multibase v0.2.0
-	github.com/multiformats/go-multihash v0.2.1
+	github.com/multiformats/go-multihash v0.2.2
 	github.com/multiformats/go-varint v0.0.7
 	github.com/pkg/errors v0.9.1
 	github.com/sourcenetwork/immutable v0.2.2
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.15.0
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.8.3
 	github.com/textileio/go-libp2p-pubsub-rpc v0.0.9
 	github.com/tidwall/btree v1.6.0
 	github.com/ugorji/go/codec v1.2.11
