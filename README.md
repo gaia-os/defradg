@@ -5,7 +5,6 @@ To get started, clone this repo and run:
 ```
 docker build . -t defradb_docker_dev
 docker run -i -p 9181:9181 defradb_docker_dev &
-python3 schema.py
 ```
 
 A common command used during testing is one that stops the running container, starts a new one, and loads it up with the schema. Here is that command:
