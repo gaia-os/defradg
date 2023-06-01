@@ -39,7 +39,6 @@ type scanNode struct {
 	desc client.CollectionDescription
 
 	fields []*client.FieldDescription
-	docKey []byte
 
 	showDeleted bool
 
@@ -106,7 +105,7 @@ func (n *scanNode) Next() (bool, error) {
 	// keep scanning until we find a doc that passes the filter
 	for {
 		var err error
-		n.docKey, n.currentValue, err = n.fetcher.FetchNextDoc(n.p.ctx, n.documentMapping)
+		_, n.currentValue, err = n.fetcher.FetchNextDoc(n.p.ctx, n.documentMapping)
 		if err != nil {
 			return false, err
 		}
@@ -160,10 +159,10 @@ func (n *scanNode) simpleExplain() (map[string]any, error) {
 	simpleExplainMap := map[string]any{}
 
 	// Add the filter attribute if it exists.
-	if n.filter == nil || n.filter.ExternalConditions == nil {
+	if n.filter == nil {
 		simpleExplainMap[filterLabel] = nil
 	} else {
-		simpleExplainMap[filterLabel] = n.filter.ExternalConditions
+		simpleExplainMap[filterLabel] = n.filter.ToMap(n.documentMapping)
 	}
 
 	// Add the collection attributes.

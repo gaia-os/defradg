@@ -1,4 +1,4 @@
-// Copyright 2022 Democratized Data Foundation
+// Copyright 2023 Democratized Data Foundation
 //
 // Use of this software is governed by the Business Source License
 // included in the file licenses/BSL.txt.
@@ -17,24 +17,10 @@ import (
 	explainUtils "github.com/sourcenetwork/defradb/tests/integration/explain"
 )
 
-var groupLimitPattern = dataMap{
-	"explain": dataMap{
-		"selectTopNode": dataMap{
-			"limitNode": dataMap{
-				"groupNode": dataMap{
-					"selectNode": dataMap{
-						"scanNode": dataMap{},
-					},
-				},
-			},
-		},
-	},
-}
-
-func TestDefaultExplainRequestWithLimitAndOffsetOnParentGroupBy(t *testing.T) {
+func TestDefaultExplainRequestWithLimitAndOffsetOnInnerGroupSelection(t *testing.T) {
 	test := testUtils.TestCase{
 
-		Description: "Explain (default) request with limit and offset on parent groupBy.",
+		Description: "Explain (default) request with limit and offset on inner _group selection.",
 
 		Actions: []any{
 			explainUtils.SchemaForExplainTests,
@@ -42,70 +28,15 @@ func TestDefaultExplainRequestWithLimitAndOffsetOnParentGroupBy(t *testing.T) {
 			testUtils.ExplainRequest{
 
 				Request: `query @explain {
-					Author(
-						groupBy: [name],
-						limit: 1,
-						offset: 1
-					) {
+					Author(groupBy: [name]) {
 						name
-						_group {
+						_group(limit: 2, offset: 1) {
 							age
 						}
 					}
 				}`,
 
-				ExpectedPatterns: []dataMap{groupLimitPattern},
-
-				ExpectedTargets: []testUtils.PlanNodeTargetCase{
-					{
-						TargetNodeName:    "groupNode",
-						IncludeChildNodes: false,
-						ExpectedAttributes: dataMap{
-							"groupByFields": []string{"name"},
-							"childSelects": []dataMap{
-								emptyChildSelectsAttributeForAuthor,
-							},
-						},
-					},
-					{
-						TargetNodeName:    "limitNode",
-						IncludeChildNodes: false,
-						ExpectedAttributes: dataMap{
-							"limit":  uint64(1),
-							"offset": uint64(1),
-						},
-					},
-				},
-			},
-		},
-	}
-
-	explainUtils.ExecuteTestCase(t, test)
-}
-
-func TestDefaultExplainRequestWithLimitOnParentGroupByAndInnerGroupSelection(t *testing.T) {
-	test := testUtils.TestCase{
-
-		Description: "Explain (default) request with limit and offset on parent groupBy and inner _group selection.",
-
-		Actions: []any{
-			explainUtils.SchemaForExplainTests,
-
-			testUtils.ExplainRequest{
-
-				Request: `query @explain {
-					Author(
-						groupBy: [name],
-						limit: 1
-					) {
-						name
-						_group(limit: 2) {
-							age
-						}
-					}
-				}`,
-
-				ExpectedPatterns: []dataMap{groupLimitPattern},
+				ExpectedPatterns: []dataMap{groupPattern},
 
 				ExpectedTargets: []testUtils.PlanNodeTargetCase{
 					{
@@ -118,22 +49,78 @@ func TestDefaultExplainRequestWithLimitOnParentGroupByAndInnerGroupSelection(t *
 									"collectionName": "Author",
 									"limit": dataMap{
 										"limit":  uint64(2),
-										"offset": uint64(0),
+										"offset": uint64(1),
 									},
-									"orderBy": nil,
 									"docKeys": nil,
-									"groupBy": nil,
 									"filter":  nil,
+									"groupBy": nil,
+									"orderBy": nil,
 								},
 							},
 						},
 					},
+				},
+			},
+		},
+	}
+
+	explainUtils.ExecuteTestCase(t, test)
+}
+
+func TestDefaultExplainRequestWithLimitAndOffsetOnMultipleInnerGroupSelections(t *testing.T) {
+	test := testUtils.TestCase{
+
+		Description: "Explain (default) request with limit and offset on multiple inner _group selections.",
+
+		Actions: []any{
+			explainUtils.SchemaForExplainTests,
+
+			testUtils.ExplainRequest{
+
+				Request: `query @explain {
+					Author(groupBy: [name]) {
+						name
+						innerFirstGroup: _group(limit: 1, offset: 2) {
+							age
+						}
+						innerSecondGroup: _group(limit: 2) {
+							age
+						}
+					}
+				}`,
+
+				ExpectedPatterns: []dataMap{groupPattern},
+
+				ExpectedTargets: []testUtils.PlanNodeTargetCase{
 					{
-						TargetNodeName:    "limitNode",
+						TargetNodeName:    "groupNode",
 						IncludeChildNodes: false,
 						ExpectedAttributes: dataMap{
-							"limit":  uint64(1),
-							"offset": uint64(0),
+							"groupByFields": []string{"name"},
+							"childSelects": []dataMap{
+								{
+									"collectionName": "Author",
+									"limit": dataMap{
+										"limit":  uint64(1),
+										"offset": uint64(2),
+									},
+									"docKeys": nil,
+									"filter":  nil,
+									"groupBy": nil,
+									"orderBy": nil,
+								},
+								{
+									"collectionName": "Author",
+									"limit": dataMap{
+										"limit":  uint64(2),
+										"offset": uint64(0),
+									},
+									"docKeys": nil,
+									"filter":  nil,
+									"groupBy": nil,
+									"orderBy": nil,
+								},
+							},
 						},
 					},
 				},
