@@ -196,7 +196,7 @@ def rand_evidence(observable_key, user_key):
 
 def rand_user():
   return {
-    "name": "User " + str(random.randint(1, 1000)),
+    "name": "User " + str(random.randint(1, 3)),
     "profile_url": "https://example.com/profile/" + str(random.randint(1, 1000))
   }
 
@@ -289,7 +289,8 @@ for _ in range(2):
 
     # create the indicators
     for _ in range(3):
-      observable_domain = random.choice(["Real", "Categorical"])
+      # observable_domain = random.choice(["Real", "Categorical"])
+      observable_domain = random.choice(["Real"])
 
       # one observable for each indicator
       observable_key, observable = create("Observable", observable_domain, key_response=True)
