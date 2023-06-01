@@ -131,8 +131,8 @@ def random_datetime():
 
 def rand_project():
  return {
-    "name": "Project " + str(random.randint(1, 1000)),
-    "handle": "project-" + str(random.randint(1, 1000))
+    "name": "Project 593",
+    "handle": "project-8"
   }
 
 def rand_assessment(project_key):
@@ -151,12 +151,13 @@ def rand_latent_variable(assessment_key, domain):
   }
 
 def rand_timestampvalue_real(variable_key):
+  median = random.uniform(0, 10000)
   return {
     "variable_id": variable_key,  # Assumes that you've already created the variable and have its key
     "timestamp": random_datetime(),
-    "upper_ci95": random.uniform(0, 100),
-    "lower_ci95": random.uniform(0, 100),
-    "median": random.uniform(0, 10000),
+    "upper_ci95": median - random.uniform(0, 500),
+    "lower_ci95": median + random.uniform(0, 500),
+    "median": median,
     "sigmoid_negentropy": random.uniform(0, 1)
 }
 
@@ -214,8 +215,8 @@ def rand_badge(variable_key):
     "unit": "Unit " + str(random.randint(1, 1000)),
     "more_is_better": random.choice([True, False]),
     "time_unit": "Time Unit " + str(random.randint(1, 1000)),
-    "badge_threshold": random.uniform(0, 100),
-    "zero_threshold": random.uniform(0, 1),
+    "badge_threshold": random.uniform(0, 3),
+    "zero_threshold":  0,
     "confidence": random.uniform(0, 1)
   }
 
