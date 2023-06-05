@@ -170,7 +170,6 @@ def rand_timestampvalue_categorical(variable_key):
   }
 
 def rand_observable(domain):
-  domain = random.choice(["Real", "Categorical"])
   return {
     "domain": domain,
     "name": "Observable " + str(random.randint(1, 1000)),
@@ -203,7 +202,7 @@ def rand_user():
 def rand_method(observable_key):
   return {
     "observable_id": observable_key,
-    "name": "Method " + str(random.randint(1, 1000))
+    "name": random.choice(["satellite", "expert_attestation", "iot_sensor", "image"])
   }
 
 def rand_badge(variable_key):
@@ -278,7 +277,8 @@ for _ in range(2):
   assessment_key = create("Assessment", projk)
 
   for _ in range(2):
-    variable_domain = random.choice(["Real", "Categorical"])
+    # variable_domain = random.choice(["Real", "Categorical"])
+    variable_domain = random.choice(["Real"])
     variable_key = create("LatentVariable", assessment_key, variable_domain)
 
     create("Badge", variable_key)
