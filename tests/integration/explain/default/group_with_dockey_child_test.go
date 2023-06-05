@@ -17,22 +17,10 @@ import (
 	explainUtils "github.com/sourcenetwork/defradb/tests/integration/explain"
 )
 
-var countPattern = dataMap{
-	"explain": dataMap{
-		"selectTopNode": dataMap{
-			"countNode": dataMap{
-				"selectNode": dataMap{
-					"scanNode": dataMap{},
-				},
-			},
-		},
-	},
-}
-
-func TestDefaultExplainRequestWithCountOnInlineArrayField(t *testing.T) {
+func TestDefaultExplainRequestWithDockeysOnInnerGroupSelection(t *testing.T) {
 	test := testUtils.TestCase{
 
-		Description: "Explain (default) request with count on an inline array field.",
+		Description: "Explain (default) request with dockeys on inner _group.",
 
 		Actions: []any{
 			explainUtils.SchemaForExplainTests,
@@ -40,23 +28,32 @@ func TestDefaultExplainRequestWithCountOnInlineArrayField(t *testing.T) {
 			testUtils.ExplainRequest{
 
 				Request: `query @explain {
-					Book {
-						name
-						_count(chapterPages: {})
+					Author(
+						groupBy: [age]
+					) {
+						age
+						_group(dockeys: ["bae-6a4c5bc5-b044-5a03-a868-8260af6f2254"]) {
+							name
+						}
 					}
 				}`,
 
-				ExpectedPatterns: []dataMap{countPattern},
+				ExpectedPatterns: []dataMap{groupPattern},
 
 				ExpectedTargets: []testUtils.PlanNodeTargetCase{
 					{
-						TargetNodeName:    "countNode",
+						TargetNodeName:    "groupNode",
 						IncludeChildNodes: false,
 						ExpectedAttributes: dataMap{
-							"sources": []dataMap{
+							"groupByFields": []string{"age"},
+							"childSelects": []dataMap{
 								{
-									"filter":    nil,
-									"fieldName": "chapterPages",
+									"collectionName": "Author",
+									"docKeys":        []string{"bae-6a4c5bc5-b044-5a03-a868-8260af6f2254"},
+									"filter":         nil,
+									"groupBy":        nil,
+									"limit":          nil,
+									"orderBy":        nil,
 								},
 							},
 						},
@@ -65,13 +62,13 @@ func TestDefaultExplainRequestWithCountOnInlineArrayField(t *testing.T) {
 						TargetNodeName:    "scanNode",
 						IncludeChildNodes: true, // should be leaf of it's branch, so will have no child nodes.
 						ExpectedAttributes: dataMap{
+							"collectionID":   "3",
+							"collectionName": "Author",
 							"filter":         nil,
-							"collectionID":   "2",
-							"collectionName": "Book",
 							"spans": []dataMap{
 								{
-									"start": "/2",
-									"end":   "/3",
+									"start": "/3",
+									"end":   "/4",
 								},
 							},
 						},

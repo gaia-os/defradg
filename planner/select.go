@@ -115,7 +115,7 @@ type selectNode struct {
 	// are defined in the subtype scan node.
 	filter *mapper.Filter
 
-	docKeys immutable.Option[[]string]
+	keys immutable.Option[[]string]
 
 	selectReq    *mapper.Select
 	groupSelects []*mapper.Select
@@ -167,9 +167,9 @@ func (n *selectNode) Next() (bool, error) {
 
 		n.execInfo.filterMatches++
 
-		if n.docKeys.HasValue() {
+		if n.keys.HasValue() {
 			docKey := n.currentValue.GetKey()
-			for _, key := range n.docKeys.Value() {
+			for _, key := range n.keys.Value() {
 				if docKey == key {
 					return true, nil
 				}
@@ -194,10 +194,17 @@ func (n *selectNode) simpleExplain() (map[string]any, error) {
 	simpleExplainMap := map[string]any{}
 
 	// Add the filter attribute if it exists.
-	if n.filter == nil || n.filter.ExternalConditions == nil {
+	if n.filter == nil {
 		simpleExplainMap[filterLabel] = nil
 	} else {
-		simpleExplainMap[filterLabel] = n.filter.ExternalConditions
+		simpleExplainMap[filterLabel] = n.filter.ToMap(n.documentMapping)
+	}
+
+	// Add the keys attribute if it exists.
+	if !n.keys.HasValue() {
+		simpleExplainMap[keysLabel] = nil
+	} else {
+		simpleExplainMap[keysLabel] = n.keys.Value()
 	}
 
 	return simpleExplainMap, nil
@@ -359,7 +366,6 @@ func (n *selectNode) addTypeIndexJoin(subSelect *mapper.Select) error {
 	if err != nil {
 		return err
 	}
-
 	if err := n.addSubPlan(subSelect.Index, typeIndexJoin); err != nil {
 		return err
 	}
@@ -407,7 +413,7 @@ func (p *Planner) SelectFromSource(
 		selectReq:  selectReq,
 		docMapper:  docMapper{selectReq.DocumentMapping},
 		filter:     selectReq.Filter,
-		docKeys:    selectReq.DocKeys,
+		keys:       selectReq.DocKeys,
 	}
 	limit := selectReq.Limit
 	orderBy := selectReq.OrderBy
@@ -462,7 +468,7 @@ func (p *Planner) Select(selectReq *mapper.Select) (planNode, error) {
 	s := &selectNode{
 		planner:   p,
 		filter:    selectReq.Filter,
-		docKeys:   selectReq.DocKeys,
+		keys:      selectReq.DocKeys,
 		selectReq: selectReq,
 		docMapper: docMapper{selectReq.DocumentMapping},
 	}
