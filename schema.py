@@ -171,7 +171,7 @@ def rand_timestampvalue_categorical(variable_key):
     "sigmoid_negentropy": random.uniform(0, 1)
   }
 
-def rand_observable(domain):
+def rand_observable(assessment_key, domain):
   return {
     "assessment_id": assessment_key,
     "domain": domain,
