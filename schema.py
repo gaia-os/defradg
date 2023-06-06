@@ -14,6 +14,7 @@ type Assessment {
     project: Project
     date: DateTime
     latent_variables: [LatentVariable]
+    observables: [Observable]
 }
 
 type LatentVariable {
@@ -68,6 +69,7 @@ type Indicator {
 }
 
 type Observable {
+    assessment: Assessment
     indicates: [Indicator]
     domain: String
     name: String
@@ -80,7 +82,7 @@ type Observable {
 type Evidence {
     observable: Observable
     uploaded_by: User
-    name: String
+    asset_name: String
     asset_url: String
     confidence: Float
     uploaded: DateTime
@@ -171,6 +173,7 @@ def rand_timestampvalue_categorical(variable_key):
 
 def rand_observable(domain):
   return {
+    "assessment_id": assessment_key,
     "domain": domain,
     "name": "Observable " + str(random.randint(1, 1000)),
   }
@@ -187,7 +190,7 @@ def rand_evidence(observable_key, user_key):
   return {
     "observable_id": observable_key, # Assumes that you've already created the observable and have its key
     "uploaded_by_id": user_key,
-    "name": "Evidence " + str(random.randint(1, 1000)),
+    "asset_name": "Evidence " + str(random.randint(1, 1000)),
     "asset_url": "https://example.com/evidence/" + str(random.randint(1, 1000)),
     "confidence": random.uniform(0, 1),
     "uploaded": random_datetime(),
@@ -293,7 +296,7 @@ for _ in range(2):
       observable_domain = random.choice(["Real"])
 
       # one observable for each indicator
-      observable_key, observable = create("Observable", observable_domain, key_response=True)
+      observable_key, observable = create("Observable", assessment_key, observable_domain, key_response=True)
 
       indicator_key = create("Indicator", variable_key, observable_key)
 
