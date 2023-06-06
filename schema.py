@@ -34,6 +34,7 @@ type LatentTimestampValueReal {
     timestamp: DateTime
     upper_ci95: Float
     lower_ci95: Float
+    mean: Float
     median: Float
     sigmoid_negentropy: Float
 }
@@ -43,6 +44,7 @@ type ObservableTimestampValueReal {
     timestamp: DateTime
     upper_ci95: Float
     lower_ci95: Float
+    mean: Float
     median: Float
     sigmoid_negentropy: Float
 }
@@ -159,6 +161,7 @@ def rand_timestampvalue_real(variable_key):
     "timestamp": random_datetime(),
     "upper_ci95": median - random.uniform(0, 500),
     "lower_ci95": median + random.uniform(0, 500),
+    "mean": median,
     "median": median,
     "sigmoid_negentropy": random.uniform(0, 1)
 }
