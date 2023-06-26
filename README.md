@@ -5,6 +5,8 @@ To get started, clone this repo and run:
 ```
 docker build . -t defradb_docker_dev
 docker run -i -p 9181:9181 defradb_docker_dev &
+pipenv install
+pipenv shell
 python3 schema.py
 ```
 
